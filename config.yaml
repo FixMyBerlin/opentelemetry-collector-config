@@ -1,0 +1,90 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  hostmetrics:
+    collection_interval: 10s
+    # Wichtig im Container: Host-/proc verwenden
+    root_path: /hostfs
+    scrapers:
+      cpu: {}
+
+      memory:
+        metrics:
+          system.memory.utilization:
+            enabled: true
+          # optional, falls du zusätzlich Bytes willst:
+          system.memory.usage:
+             enabled: true
+
+      filesystem:
+        metrics:
+          # "free disk %" gibt es als utilization: Anteil belegt/frei je nach Semantik
+          # (OTel nutzt utilization als Verhältnis 0..1)
+          system.filesystem.utilization:
+            enabled: true
+
+  # Docker logs aus json-file (Host-Pfad ist in den Container gemountet)
+  filelog/docker:
+    include:
+      - /var/lib/docker/containers/*/*-json.log
+    start_at: end
+    poll_interval: 200ms
+
+    # wichtig, damit der Pfad als attributes["log.file.path"] verfügbar ist
+    include_file_path: true
+
+    operators:
+      - id: container_parser
+        type: container
+        format: docker
+        add_metadata_from_filepath: false
+
+        severity:
+          parse_from: attributes.stream
+          mapping:
+            info: stdout
+            error: stderr
+          overwrite_text: true
+
+      - id: containerid_from_path
+        type: regex_parser
+        parse_from: attributes["log.file.path"]
+        regex: '^/var/lib/docker/containers/(?P<container_id>[0-9a-f]{64})/.*-json\.log$'
+
+      - id: move_container_id_to_resource
+        type: move
+        from: attributes.container_id
+        to: resource["container.id"]
+
+exporters:
+  otlp_http:
+    endpoint: "https://monitoring.fixmycity.de/otlp"
+    encoding: json
+    headers:
+      "Content-Type": "application/json"
+      "x-oneuptime-token": "YOUR-SECRET-HERE"
+
+service:
+  telemetry:
+    resource:
+      # Feste ID für die eigene Telemetrie des Collectors (Logs, interne Metriken)
+      service.instance.id: ${env:OTEL_SERVICE_INSTANCE_ID}
+
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [resource]
+      exporters: [otlp_http]
+    metrics:
+      receivers: [otlp, hostmetrics]
+      processors: [resource]
+      exporters: [otlp_http]
+    logs:
+      receivers: [otlp, filelog/docker]
+      processors: [resource]
+      exporters: [otlp_http]

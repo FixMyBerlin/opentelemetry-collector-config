@@ -1,0 +1,36 @@
+services:
+  opentelemetry-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: opentelemetry-collector
+    restart: unless-stopped
+
+    user: "0:0"
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+
+    # Wichtig: damit Prozesse/Host-Kontext sauber gelesen werden kann
+    pid: "host"
+
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+
+    environment:
+      # Feste Service-Instanz-ID – verhindert, dass sich die ID bei jedem Neustart ändert.
+      # Beliebigen stabilen Wert setzen, z. B. Hostname oder UUID.
+      OTEL_SERVICE_INSTANCE_ID: "SERVICE-ID-HERE"
+
+    volumes:
+      # Collector config
+      - ./config.yaml:/etc/otelcol-contrib/config.yaml:ro
+
+      # Docker json-file logs
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+
+      # Host-Views für hostmetrics
+      - /proc:/hostfs/proc:ro
+      - /sys:/hostfs/sys:ro
+      - /:/hostfs:ro
+
+      # Optional: Host identification
+      - /etc/hostname:/etc/hostname:ro
+      - /etc/machine-id:/etc/machine-id:ro
