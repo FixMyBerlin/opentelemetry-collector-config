@@ -19,6 +19,9 @@ services:
       # Beliebigen stabilen Wert setzen, z. B. Hostname oder UUID.
       OTEL_SERVICE_INSTANCE_ID: "SERVICE-ID-HERE"
 
+      # OneUptime Ingest-Token – projektweit eindeutig, in der OneUptime-Projektverwaltung zu finden.
+      ONEUPTIME_TOKEN: "YOUR-SECRET-HERE"
+
     volumes:
       # Collector config
       - ./config.yaml:/etc/otelcol-contrib/config.yaml:ro

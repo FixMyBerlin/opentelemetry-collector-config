@@ -12,17 +12,14 @@ Diese Vorlage zeigt, wie der [OpenTelemetry Collector](https://opentelemetry.io/
 
 ## Schnellstart
 
-1. Token eintragen – `config.yaml`:
+1. Werte in `docker-compose.yml` eintragen:
    ```yaml
-   "x-oneuptime-token": "YOUR-SECRET-HERE"
+   OTEL_SERVICE_INSTANCE_ID: "SERVICE-ID-HERE"   # z. B. Hostname oder UUID
+   ONEUPTIME_TOKEN: "YOUR-SECRET-HERE"           # Ingest-Token aus der OneUptime-Projektverwaltung
    ```
+   Beachte, dass das Ingest Token pro Projekt festgelegt ist.
 
-2. Service ID – `docker-compose.yaml`:
-   ```yaml
-   "OTEL_SERVICE_INSTANCE_ID": "SERVICE-ID-HERE"
-   ```
-
-3. Collector starten:
+2. Collector starten:
    ```bash
    docker compose up -d
    ```

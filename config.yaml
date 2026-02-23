@@ -6,6 +6,7 @@ receivers:
       http:
         endpoint: 0.0.0.0:4318
 
+# hostmetrics Docs: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver
   hostmetrics:
     collection_interval: 10s
     # Wichtig im Container: Host-/proc verwenden
@@ -39,6 +40,7 @@ receivers:
     include_file_path: true
 
     operators:
+    # Container Parser Docs: https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/pkg/stanza/docs/operators/container.md
       - id: container_parser
         type: container
         format: docker
@@ -61,13 +63,22 @@ receivers:
         from: attributes.container_id
         to: resource["container.id"]
 
+processors:
+  resource:
+    attributes:
+      - key: service.instance.id
+        value: ${env:OTEL_SERVICE_INSTANCE_ID}
+        action: upsert
+
 exporters:
   otlp_http:
     endpoint: "https://monitoring.fixmycity.de/otlp"
     encoding: json
     headers:
       "Content-Type": "application/json"
-      "x-oneuptime-token": "YOUR-SECRET-HERE"
+      # TODO Enter Ingest Secret
+      # OneUptime Token is project based!
+      "x-oneuptime-token": ${env:ONEUPTIME_TOKEN}
 
 service:
   telemetry:
