@@ -17,16 +17,14 @@ services:
     pid: "host"
 
     ports:
-      - "4317:4317"
-      - "4318:4318"
+      # Standardmäßig nur lokal erreichbar. Für Zugriff von außen in der .env
+      # OTEL_BIND_ADDRESS=0.0.0.0 setzen.
+      - "${OTEL_BIND_ADDRESS:-127.0.0.1}:4317:4317"
+      - "${OTEL_BIND_ADDRESS:-127.0.0.1}:4318:4318"
 
-    environment:
-      # Feste Service-Instanz-ID – verhindert, dass sich die ID bei jedem Neustart ändert.
-      # Beliebigen stabilen Wert setzen, z. B. Hostname oder UUID.
-      OTEL_SERVICE_INSTANCE_ID: "SERVICE-ID-HERE"
-
-      # OneUptime Ingest-Token – projektweit eindeutig, in der OneUptime-Projektverwaltung zu finden.
-      ONEUPTIME_TOKEN: "YOUR-SECRET-HERE"
+    # Serverspezifische Werte (Instance-ID, Token) – siehe .env.example
+    env_file:
+      - .env
 
     volumes:
       # Collector config
