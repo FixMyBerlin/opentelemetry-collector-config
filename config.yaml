@@ -118,7 +118,9 @@ service:
       disable_stacktrace: true
     resource:
       # Feste ID für die eigene Telemetrie des Collectors (Logs, interne Metriken)
-      service.instance.id: ${env:OTEL_SERVICE_INSTANCE_ID}
+      attributes:
+        - name: service.instance.id
+          value: ${env:OTEL_SERVICE_INSTANCE_ID}
 
   pipelines:
     traces:
