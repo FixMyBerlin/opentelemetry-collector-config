@@ -4,6 +4,12 @@ services:
     container_name: opentelemetry-collector
     restart: unless-stopped
 
+    # Eigene Logs nicht im json-file-Format schreiben, sonst liest filelog/docker
+    # die Fehlermeldungen des Collectors wieder ein (Rückkopplung).
+    # `docker logs` funktioniert mit dem local-Treiber weiterhin.
+    logging:
+      driver: local
+
     user: "0:0"
     command: ["--config=/etc/otelcol-contrib/config.yaml"]
 

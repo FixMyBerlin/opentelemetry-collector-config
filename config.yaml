@@ -36,6 +36,13 @@ receivers:
     start_at: end
     poll_interval: 200ms
 
+    # Bei vollem Exporter langsamer lesen statt Logs zu verwerfen
+    retry_on_failure:
+      enabled: true
+      initial_interval: 1s
+      max_interval: 30s
+      max_elapsed_time: 5m
+
     # wichtig, damit der Pfad als attributes["log.file.path"] verfügbar ist
     include_file_path: true
 
@@ -64,6 +71,18 @@ receivers:
         to: resource["container.id"]
 
 processors:
+  # Schützt den Host, falls sich bei einem Ausfall des Backends Daten stauen
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+
+  # Bündelt Daten zu wenigen großen Requests statt vieler kleiner
+  batch:
+    send_batch_size: 2048
+    send_batch_max_size: 4096
+    timeout: 5s
+
   resource:
     attributes:
       - key: service.instance.id
@@ -79,9 +98,24 @@ exporters:
       # TODO Enter Ingest Secret
       # OneUptime Token is project based!
       "x-oneuptime-token": ${env:ONEUPTIME_TOKEN}
+    timeout: 30s
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 60s
+      max_elapsed_time: 15m
+    sending_queue:
+      enabled: true
+      num_consumers: 4
+      # Anzahl Batches – reicht dank batch-Processor für einige Minuten Ausfall
+      queue_size: 5000
 
 service:
   telemetry:
+    logs:
+      level: warn
+      # Keine mehrzeiligen Stacktraces in den Collector-Logs
+      disable_stacktrace: true
     resource:
       # Feste ID für die eigene Telemetrie des Collectors (Logs, interne Metriken)
       service.instance.id: ${env:OTEL_SERVICE_INSTANCE_ID}
@@ -89,13 +123,13 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [resource]
+      processors: [memory_limiter, resource, batch]
       exporters: [otlp_http]
     metrics:
       receivers: [otlp, hostmetrics]
-      processors: [resource]
+      processors: [memory_limiter, resource, batch]
       exporters: [otlp_http]
     logs:
       receivers: [otlp, filelog/docker]
-      processors: [resource]
+      processors: [memory_limiter, resource, batch]
       exporters: [otlp_http]
