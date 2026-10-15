@@ -6,8 +6,8 @@ receivers:
       http:
         endpoint: 0.0.0.0:4318
 
-# hostmetrics Docs: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver
-  hostmetrics:
+# host_metrics Docs: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver
+  host_metrics:
     collection_interval: 10s
     # Wichtig im Container: Host-/proc verwenden
     root_path: /hostfs
@@ -30,7 +30,7 @@ receivers:
             enabled: true
 
   # Docker logs aus json-file (Host-Pfad ist in den Container gemountet)
-  filelog/docker:
+  file_log/docker:
     include:
       - /var/lib/docker/containers/*/*-json.log
     start_at: end
@@ -126,10 +126,10 @@ service:
       processors: [memory_limiter, resource, batch]
       exporters: [otlp_http]
     metrics:
-      receivers: [otlp, hostmetrics]
+      receivers: [otlp, host_metrics]
       processors: [memory_limiter, resource, batch]
       exporters: [otlp_http]
     logs:
-      receivers: [otlp, filelog/docker]
+      receivers: [otlp, file_log/docker]
       processors: [memory_limiter, resource, batch]
       exporters: [otlp_http]

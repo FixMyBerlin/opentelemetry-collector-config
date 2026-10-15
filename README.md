@@ -6,8 +6,8 @@ Diese Vorlage zeigt, wie der [OpenTelemetry Collector](https://opentelemetry.io/
 
 | Receiver | Daten |
 |---|---|
-| `hostmetrics` | CPU-, Arbeitsspeicher- und Dateisystem-Metriken des Host-Systems |
-| `filelog/docker` | Container-Logs aus dem Docker-JSON-Log-Treiber |
+| `host_metrics` | CPU-, Arbeitsspeicher- und Dateisystem-Metriken des Host-Systems |
+| `file_log/docker` | Container-Logs aus dem Docker-JSON-Log-Treiber |
 | `otlp` (gRPC + HTTP) | Empfang externer Traces, Metriken und Logs von eigenen Diensten |
 
 ## Schnellstart

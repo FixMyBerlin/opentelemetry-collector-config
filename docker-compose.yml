@@ -4,7 +4,7 @@ services:
     container_name: opentelemetry-collector
     restart: unless-stopped
 
-    # Eigene Logs nicht im json-file-Format schreiben, sonst liest filelog/docker
+    # Eigene Logs nicht im json-file-Format schreiben, sonst liest file_log/docker
     # die Fehlermeldungen des Collectors wieder ein (Rückkopplung).
     # `docker logs` funktioniert mit dem local-Treiber weiterhin.
     logging:
@@ -33,7 +33,7 @@ services:
       # Docker json-file logs
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
 
-      # Host-Views für hostmetrics
+      # Host-Views für host_metrics
       - /proc:/hostfs/proc:ro
       - /sys:/hostfs/sys:ro
       - /:/hostfs:ro
